@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"aaa_bekend/internal/lmodel"
 	"aaa_bekend/internal/auth"
+	"aaa_bekend/internal/lmodel"
 	"net/http"
 	"strings"
 )
@@ -12,29 +12,18 @@ func AuthN(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 
 		// TODO
-		if authHeader == "" {
-			http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
-			return
-		}
-		
-		if !strings.HasPrefix(authHeader, "Bearer"){
-			http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
+		authParts := strings.Fields(authHeader)
+		if len(authParts) != 2 || !strings.EqualFold(authParts[0], "Bearer") {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		// TODO
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		claims, err := auth.ValidateToken(token)
+		claims, err := auth.ValidateToken(authParts[1])
 		if err != nil {
-			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
-		if claims.UserID <= 0 || claims.Username == "" || claims.Role == "" {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
-			return
-		}
-
 		userCtx := lmodel.UserContext{
 			ID:       claims.UserID,
 			Username: claims.Username,

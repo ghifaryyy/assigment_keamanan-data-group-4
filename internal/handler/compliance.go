@@ -13,12 +13,12 @@ func GetMyData(w http.ResponseWriter, r *http.Request) {
 
 	//TODO
 	profile, err := db.GetUserByID(r.Context(), user.ID)
-
-	//TODO
 	if err != nil {
 		http.Error(w, "Failed to fetch user data", http.StatusInternalServerError)
 		return
 	}
+
+	//TODO
 
 	json.NewEncoder(w).Encode(profile)
 }
@@ -56,15 +56,12 @@ func GetMyAuditLog(w http.ResponseWriter, r *http.Request) {
 
 	// TODO
 	logs, err := db.GetUserAuditLogs(r.Context(), user.ID)
-
-	// TODO
 	if err != nil {
 		http.Error(w, "Failed to fetch audit logs", http.StatusInternalServerError)
 		return
 	}
-	if logs == nil {
-		logs = []lmodel.AuditLog{}
-	}
+
+	// TODO
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"user":  user.Username,
@@ -78,27 +75,21 @@ func ExportMyData(w http.ResponseWriter, r *http.Request) {
 
 	// TODO
 	profile, err := db.GetUserByID(r.Context(), user.ID)
-
-	// TODO
 	if err != nil {
 		http.Error(w, "Failed to fetch user data", http.StatusInternalServerError)
 		return
 	}
+
+	// TODO
 	projects, err := db.GetUserProjects(r.Context(), user.ID)
 	if err != nil {
-		http.Error(w, "Failed to fetch user projects", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
 		return
 	}
 	logs, err := db.GetUserAuditLogs(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, "Failed to fetch audit logs", http.StatusInternalServerError)
 		return
-	}
-	if projects == nil {
-		projects = []lmodel.Project{}
-	}
-	if logs == nil {
-		logs = []lmodel.AuditLog{}
 	}
 
 	export := map[string]interface{}{
