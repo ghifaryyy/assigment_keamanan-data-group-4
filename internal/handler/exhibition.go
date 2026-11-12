@@ -31,7 +31,10 @@ func SubmitProject(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	if req.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
 	// TODO: Simpan proyek ke database
 	projectID, err := db.CreateProject(r.Context(), req.Title, req.Description, userCtx.ID)
 	if err != nil {
@@ -113,25 +116,26 @@ func GetProjectGrades(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Jika role student, periksa kepemilikan proyek
-	if userCtx.Role == "student" {
-		project, err := db.GetProjectByID(r.Context(), projectID)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				http.Error(w, "Project not found", http.StatusNotFound)
-				return
-			}
-			http.Error(w, "Failed to fetch project", http.StatusInternalServerError)
+	// Periksa apakah proyek tersedia
+	project, err := db.GetProjectByID(r.Context(), projectID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Project not found", http.StatusNotFound)
 			return
 		}
+		http.Error(w, "Failed to fetch project", http.StatusInternalServerError)
+		return
+	}
 
+	// TODO: Jika role student, periksa kepemilikan proyek
+	if userCtx.Role == "student" {
 		if project.StudentID != userCtx.ID {
 			http.Error(w, "Forbidden: you can only view grades for your own projects", http.StatusForbidden)
 			return
 		}
-
 	}
 
+	// Ambil nilai proyek dari database
 	grades, err := db.GetGradesForProject(r.Context(), projectID)
 	if err != nil {
 		http.Error(w, "Failed to fetch grades", http.StatusInternalServerError)
@@ -141,6 +145,6 @@ func GetProjectGrades(w http.ResponseWriter, r *http.Request) {
 	if grades == nil {
 		grades = []lmodel.Grade{}
 	}
-	json.NewEncoder(w).Encode(grades)
 
+	json.NewEncoder(w).Encode(grades)
 }
